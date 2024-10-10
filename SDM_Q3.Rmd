@@ -1,0 +1,75 @@
+---
+title: "SDM2_HW2"
+author: "Sri Pavankrishna Yenugu"
+date: "2024-03-08"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+
+3.Consider the MovieLense data that is available in the recommenderlab package
+>data(MovieLense)
+>?MovieLense
+The data was collected through the MovieLens web site during a seven- month, and contains about 100,000 ratings (1-5) from 943 users on 1664 movies. See the help file on the data to understand how to best manipulate the object.
+a) Develop a user-based recommender system. Create the system so that
+outputs a user’s top ten recommendations. Demo it on five users.
+
+```{r}
+#install.packages("recommenderlab")
+library(recommenderlab)
+data(MovieLense)
+head(MovieLense)
+rec_model <- Recommender(data = MovieLense, method = "UBCF")
+usr_ids <- c(1, 100, 200, 300, 400)
+i <- 1
+while (i <= length(usr_ids)) {
+  usr_id <- usr_ids[i]
+  usr_recs <- predict(rec_model, MovieLense[usr_id, ], n = 10)
+  movie_ids <- as(usr_recs, "list")[[1]]
+  cat("User:", usr_id, "\n")
+  print(movie_ids)
+  cat("\n")
+  i <- i + 1
+}
+
+```
+
+b) For the same users in part A, predict their top 10 recommendations based on an item-based recommender system. How do they compare?
+
+```{r}
+library(recommenderlab)
+data(MovieLense)
+usr_ids <- c(1, 100, 200, 300, 400)
+rec_model_ibcf <- Recommender(data = MovieLense, method = "IBCF")
+i <- 1
+while (i <= length(usr_ids)) {
+  usr_id <- usr_ids[i]
+  usr_recs <- predict(rec_model_ibcf, MovieLense[usr_id, ], n = 10)
+  movie_ids <- as(usr_recs, "list")[[1]]
+  cat("User:", usr_id, " (IBCF)\n")
+  print(movie_ids)
+  cat("\n")
+  i <- i + 1
+}
+```
+You can see that there are significant differences between the two sets of recomendations for each user by comparing them. This is due to the fact that different fundamental principles are used by filtering algorithms that are item based and user based. While item based filtering proposess items comparable to those the user has already liked, user based filtering suggests goods enjoyed by similar users.
+
+
+c) Consider the first user part A. Are the goals of a recommender system met – relevance, novelty, serendipity, diversity? Comment on each of the best you can given the information you have.
+
+User 100 generally likes Drama, Comedy, and Thriller kind of movies.
+
+1. Relevance:
+- It refers to how well the recommended items match the user's preferences or interests. From the list of top 10 recommendations for User 1, we see movie titles such as "Boot, Das (1981)", "Matilda (1996)", "Winter Guest, The (1997)", "Leaving Las Vegas (1995)", and "Wag the Dog (1997)". These recommendations seem relevant as they align with the user's previously rated movies like "Matilda (1996)" and "Leaving Las Vegas (1995)". Therefore, in terms of relevance, the recommender system seems to be meeting the goal for User 1.
+
+2. Novelty:
+- It refers to recommending items that the user has not seen or experienced before. In this case, we do not have direct information on whether the user has seen the recommended movies before. However, we can assume that movies like "Boot, Das (1981)", "Winter Guest, The (1997)", and "Double vie de Veronique, La (Double Life of Veronique, The) (1991)" might offer some novelty to the user, especially if they have not watched these movies previously. So, the recommender system appears to provide some level of novelty.
+
+3.  Serendipity:
+- It  refers to surprising the user with unexpected recommendations that they end up liking. It's hard to gauge serendipity directly from the list provided, but movies like "Manchurian Candidate, The (1962)" or "City of Lost Children, The (1995)" might offer serendipitous recommendations if they are outside the user's typical genre preferences. However, without more information on the user's viewing habits, it's challenging to assess the level of serendipity.
+
+4.Diversity:
+- It refers to providing a range of items from various genres or categories. Looking at the list, we see a mix of genres such as drama, comedy, and thriller. This mix indicates that the recommender system is trying to provide a diverse set of recommendations to User 1. However, without knowing more about the user's specific preferences, it's difficult to determine if this level of diversity is sufficient.
+
+In conclusion, based on the provided list of recommendations for User 1, the recommender system appears to be meeting the goals of relevance and possibly novelty. The level of serendipity and diversity is harder to assess without more detailed information about the user's preferences and viewing history.

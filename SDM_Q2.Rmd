@@ -1,0 +1,75 @@
+---
+title: "SDM2_HW2"
+author: "Sri Pavankrishna Yenugu"
+date: "2024-03-08"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+2)
+Consider the California Housing Data from KAGGLE. You are going to apply
+association rules to this data. (https://www.kaggle.com/camnugent/california-
+housing-prices).
+a. Read in the data and transfer to a binary incidence matrix. Visualize this matrix.
+
+```{r}
+setwd("/Users/sripavanyenugu/Downloads")
+
+library(arules)
+
+# Read the data
+my_housing_data <- read.csv("housing.csv")
+
+my_housing_data$ocean_proximity <- as.factor(my_housing_data$ocean_proximity)
+
+my_numeric_cols <- c("housing_median_age", "total_rooms", "total_bedrooms", 
+                  "population", "households", "median_income", 
+                  "latitude", "longitude")
+
+my_housing_data[, my_numeric_cols] <- lapply(my_housing_data[, my_numeric_cols], as.factor)
+my_housing_data$median_house_value <- cut(my_housing_data$median_house_value, breaks = 5)
+
+# Convert to binary matrix
+my_housing_trans <- as(my_housing_data, "transactions")
+my_housing_rules <- apriori(my_housing_trans, parameter = list(support = 0.001, confidence = 0.5))
+
+inspect(head(my_housing_rules))
+
+
+```
+b. What are the top three high lift rules?
+
+```{r}
+my_trans <- as(my_housing_data, "transactions")
+my_rules <- apriori(my_trans, parameter = list(support = 0.01, confidence = 0.5))
+top_three_lift_rules <- inspect(sort(my_rules, by = "lift", decreasing = TRUE)[1:3])
+
+```
+
+c. What are the top 4 rules according to confidence?
+
+```{r}
+
+inspect(sort(my_rules,by="confidence",decreasing=TRUE)[1:4])
+
+```
+d. A person comes to you and wants to purchase an average priced home as close to the ocean as possible. What can you recommend and/or what can the expect? Use association rules to guide you.
+
+Recommendations:
+-For an average-priced home between $14,500 to $112,000, expect properties INLAND.
+-For homes priced between $112,000 to $209,000 and with median ages 35 or 36, expect properties near the ocean.
+These recommendations are based on association rules from the dataset.
+
+
+e. What characteristics in the data associate with low population areas?
+
+INLAND Locations:
+-Lower median incomes $0.5 to $1.75 are associated with INLAND locations.
+-Lower median house values $14,500 to $112,000 are also associated with INLAND areas.
+-Younger median housing ages (around 28) are linked to INLAND areas.
+
+Low Population Areas:
+-Lower median incomes, lower house values, and younger housing ages are characteristics associated with low population areas in the dataset.
+-These associations suggest that INLAND locations, with their lower median incomes and house values, tend to have lower population densities.
+

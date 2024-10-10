@@ -1,0 +1,93 @@
+---
+title: "SDM2_HW2"
+author: "Sri Pavankrishna Yenugu"
+date: "2024-03-08"
+output:
+  pdf_document: default
+  html_document: default
+---
+Q1.(Modified Exercise 14.4 in ESL) Cluster the demographic data (>data(marketing in ESL package)) of Table 14.1 using “generalized association rules” with a classification tree. (This data can also be found on the ESL website). Specifically, generate a reference sample the same size as the training set, by either (a) randomly permuting the columns independently, or by (b) sampling from a uniform distribution the values within each feature. Build a classification tree to the training sample (class 1) and the reference sample (class 0) and describe the terminal nodes having highest estimated class 1 probability.
+
+```{r}
+library(ISLR2)
+library(arules)
+#install.packages("gtools")
+library(gtools)
+library(rpart)
+library(rpart.plot)
+mark_data <- read.table("/Users/sripavanyenugu/Downloads/marketing.data.txt")
+str(mark_data)
+```
+```{r}
+head(mark_data)
+```
+
+```{r}
+market <- na.omit(mark_data)
+rownames(market) <- NULL
+attr(market, "na.action") <- NULL
+library(dplyr)
+marke <- mutate_if(market, is.numeric, as.factor)
+
+set.seed(123)
+samp <- lapply(marke, function(x){sample(x, replace=TRUE) })
+samp <- as.data.frame(samp)
+marke$class <- 1
+samp$class <- 0
+
+data <- rbind(marke, samp)
+data1 = data[sample(nrow(data)),]
+```
+
+#Classification Tree
+```{r}
+library("rpart")
+set.seed(123)
+model.control <- rpart.control(minsplit = 600, cp = 0)
+fit_W <- rpart(class~., data = data1, method = "class", control =
+model.control)
+names(fit_W)
+```
+
+```{r}
+plot(fit_W$cptable[,4], main = "Cross-validation Error for Model Selection", ylab = "Cross-validation Error")
+```
+
+```{r}
+plot(fit_W$cptable[,1], main = "Cp for Model Selection", ylab = "Cp")
+```
+
+```{r}
+min_cp_index <- which.min(fit_W$cptable[, 4])
+
+pruned_fit_W <- prune(fit_W, cp = fit_W$cptable[min_cp_index, 1])
+
+plot(pruned_fit_W, branch = 0.3, compress = TRUE, main = "Pruned Tree")
+text(pruned_fit_W, cex = 0.5)
+
+```
+
+```{r}
+plot(pruned_fit_W, branch = .3, compress = T, main = "Pruned Tree")
+text(pruned_fit_W, cex = .5)
+```
+
+```{r}
+library(rpart.plot)
+rpart.plot(pruned_fit_W, type = 5, extra = 104, cex = 0.4)
+```
+
+```{r}
+set.seed(123)
+y_pred <- predict(pruned_fit_W, data1, type = 'class')
+misclassification_rate <- mean(y_pred != data1$class)
+misclassification_rate
+```
+
+Conclusion:
+
+After pruning the tree, 4 major terminal nodes for class-1 were found, each with good observations and high class-1 percentages:
+
+- Nodes: 7% (69% 1s), 6% (85% 1s), 12% (78% 1s), 10% (66% 1s).
+- 54% of data is in class-1 nodes, close to 50%, with a misclassification rate of 18.78%.
+- Key variables for class-1 separation: ANNUAL INCOME OF HOUSEHOLD, HOUSEHOLDER STATUS, OCCUPATION, EDUCATION, AGE.
